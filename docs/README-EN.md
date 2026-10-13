@@ -30,9 +30,9 @@ background, history, and the original feature set that this LLM edition extends.
 
 ## Download Translumo-LLM
 
-**Direct download link to the latest version (v1.3.1):**
+**Direct download link to the latest version (v1.4.0):**
 
-[Translumo-LLM-v1.3.1.zip](https://github.com/Chaobs/Translumo-LLM/releases/download/v1.3.1/Translumo-LLM-v1.3.1.zip)
+[Translumo-LLM-v1.4.0.zip](https://github.com/Chaobs/Translumo-LLM/releases/download/v1.4.0/Translumo-LLM-v1.4.0.zip)
 
 After downloading, unzip the archive and run `Translumo-LLM.exe`. All required dependencies (Python
 runtime, OCR models, and WebView2) are bundled — no separate installation is needed.
