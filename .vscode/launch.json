@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Translumo-LLM (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      // Self-contained WinExe: launch the apphost .exe, not the .dll
+      "program": "${workspaceFolder}/src/Translumo/bin/Debug/net8.0-windows10.0.19041.0/win-x64/Translumo-LLM.exe",
+      "cwd": "${workspaceFolder}/src/Translumo/bin/Debug/net8.0-windows10.0.19041.0/win-x64",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "justMyCode": true
+    },
+    {
+      "name": "Attach to process",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}

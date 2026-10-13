@@ -30,9 +30,9 @@ background, history, and the original feature set that this LLM edition extends.
 
 ## Download Translumo-LLM
 
-**Direct download link to the latest version (v1.2.2):**
+**Direct download link to the latest version (v1.3.1):**
 
-[Translumo-LLM-v1.2.2.zip](https://github.com/Chaobs/Translumo-LLM/releases/download/v1.2.2/Translumo-LLM-v1.2.2.zip)
+[Translumo-LLM-v1.3.1.zip](https://github.com/Chaobs/Translumo-LLM/releases/download/v1.3.1/Translumo-LLM-v1.3.1.zip)
 
 After downloading, unzip the archive and run `Translumo-LLM.exe`. All required dependencies (Python
 runtime, OCR models, and WebView2) are bundled — no separate installation is needed.
@@ -61,7 +61,7 @@ Full release history: [Chaobs/Translumo-LLM/releases](https://github.com/Chaobs/
 - **Low latency**
   Several optimizations reduce system impact and minimize latency between text appearance and translation.
 
-- **Integrated modern OCR engines**: Windows OCR (recommended), Tesseract 5.2 (legacy), EasyOCR (legacy).
+- **Integrated modern OCR engines**: Windows OCR (recommended), PaddleOCR-VL (vision-language model via a self-hosted server), Tesseract 5.2 (legacy), EasyOCR (legacy).
 
 - **Available classic translators**: DeepL (recommended), Google Translate, Yandex Translate, Naver Papago.
 
@@ -104,6 +104,22 @@ Tesseract is old, slow, and produces many errors.
 EasyOCR is even slower, requires significant resources (including a specific GPU), and often leads to bugs.
 
 It is generally better to keep only WindowsOCR, but the other engines are still included for historical reasons.
+
+### Using PaddleOCR-VL
+
+[PaddleOCR-VL](https://github.com/PaddlePaddle/PaddleOCR) is a lightweight vision-language OCR model that is far more accurate than classic engines on stylized game fonts, mixed scripts and busy backgrounds. Translumo-LLM talks to it through any **OpenAI-compatible server**, so you can run it on your own GPU (locally or on another machine) without installing anything into Translumo itself.
+
+1. Start a server, for example with vLLM (Linux/WSL2 with an NVIDIA GPU):
+   ```bash
+   vllm serve PaddlePaddle/PaddleOCR-VL --trust-remote-code --port 8000
+   ```
+   PaddleOCR's own server works too: `paddleocr genai_server --model_name PaddleOCR-VL-0.9B --backend vllm --port 8118`.
+2. In **Settings → Text recognition**, enable **PaddleOCR-VL** and set the API base URL (default `http://localhost:8000/v1`) and the model name served by your server. The API key is optional.
+3. Press **Test connection**, which checks that the server is reachable and serves that model.
+
+**Detect individual lines** (on by default) asks the model for each line separately, then groups them into blocks: a sentence that wraps over several lines is rejoined, while a speaker name, HUD values and button hints stay apart. The translation is shown as one entry with each block on its own line. This needs PaddleOCR-VL 1.5 or newer; turn it off for older models.
+
+Tip: keep **Windows OCR** enabled alongside it. The fast engine then watches the screen continuously and PaddleOCR-VL is only queried when new text appears, which keeps latency low.
 
 ### Select Minimum Capture Area
 Reducing the capture area decreases the chance of picking up random letters from the background. Larger frames take longer to process.
@@ -182,7 +198,7 @@ A: Ensure the application path contains only Latin letters.
 
 4. Produce a distributable single-file build:
    ```bash
-   dotnet publish src/Translumo/Translumo.csproj -c Release -r win-x64 -p:SolutionDir="$(pwd)/"
+   dotnet publish src/Translumo/Translumo.csproj -c Release -r win-x64
    ```
    The published files land in `src/Translumo/bin/Release/net8.0-windows/win-x64/publish/`. On first launch the .NET host extracts the single-file bundle to a local `temp\` folder next to the executable, then runs normally.
 
@@ -193,6 +209,7 @@ This section summarizes the key features Translumo-LLM has added and the main bu
 **New features**
 - **LLM AI translation** — context-aware, higher-quality translations via LLM providers: DeepSeek, Qwen, Kimi, GLM (Zhipu), MiniMax, ChatGPT, Claude, Gemini, Grok, and any custom OpenAI-compatible endpoint.
 - **Ollama local models** — run open-source AI models entirely on your own machine through Ollama; no API key or internet connection required for translation.
+- **PaddleOCR-VL text recognition** — a new OCR engine backed by the PaddleOCR-VL vision-language model served from any OpenAI-compatible endpoint (vLLM / SGLang / PaddleOCR genai_server); see "Using PaddleOCR-VL".
 - **Google Lens Style instant image translation** — press **Alt+D** to capture and translate any static region on screen on demand (see FAQ).
 - **UI localization** — the interface is now available in Simplified Chinese, Traditional Chinese, Japanese, Russian, and English.
 - **Switchable light/dark theme** — choose the appearance that suits you.
@@ -223,4 +240,5 @@ Planned future work (not yet implemented):
 - [OpenCvSharp](https://github.com/shimat/opencvsharp)
 - [Python.NET](https://github.com/pythonnet/pythonnet)
 - [EasyOCR](https://github.com/JaidedAI/EasyOCR)
+- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) (PaddleOCR-VL)
 - [Silero TTS](https://github.com/snakers4/silero-models)

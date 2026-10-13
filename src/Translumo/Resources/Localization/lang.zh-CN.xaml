@@ -128,6 +128,11 @@
     <system:String x:Key="Str.OcrSettings.WindowsOcrDesc2">可能需要安装其他语言包。</system:String>
     <system:String x:Key="Str.OcrSettings.EasyOcrDesc" xml:space="preserve">Jaided AI出品的最先进的开源OCR解决方案。&#13;&#13;即使在识别复杂的背景以及花哨的字体时，也能实现高精度的文本识别。&#13;&#13;&lt;Bold&gt;性能影响:&lt;/Bold&gt; 高</system:String>
     <system:String x:Key="Str.OcrSettings.EasyOcrDesc2">需要安装（Python、PyTorch）其他软件包。</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVl">PaddleOCR-VL</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDesc" xml:space="preserve">百度飞桨出品的视觉语言 OCR 模型，通过 OpenAI 兼容 API 调用。&#13;&#13;对游戏艺术字体、多语种混排及复杂背景的识别精度极高。&#13;&#13;&lt;Bold&gt;性能影响:&lt;/Bold&gt; 在服务器端运行（建议使用 GPU）</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDesc2">需要运行 PaddleOCR-VL 服务（vLLM / SGLang / PaddleOCR genai_server）。</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlModel">模型名称</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDetectLines">逐行检测（PaddleOCR-VL 1.5 及以上）</system:String>
 
     <!--  About window  -->
     <system:String x:Key="Str.About.Edition">Translumo-LLM 版本</system:String>

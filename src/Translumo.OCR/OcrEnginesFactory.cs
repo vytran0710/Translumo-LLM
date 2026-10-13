@@ -6,6 +6,7 @@ using Translumo.Infrastructure.Language;
 using Translumo.Infrastructure.Python;
 using Translumo.OCR.Configuration;
 using Translumo.OCR.EasyOCR;
+using Translumo.OCR.PaddleOcrVl;
 using Translumo.OCR.Tesseract;
 using Translumo.OCR.WindowsOCR;
 
@@ -77,6 +78,20 @@ namespace Translumo.OCR
                         var engine = TryGetEngine(() => new EasyOCREngine(langDescriptor, _pythonEngine, _logger), detectionLanguage);
                         if (engine != null)
                             yield return engine;
+                    }
+                }
+
+                if (confType == typeof(PaddleOcrVlConfiguration))
+                {
+                    if (!TryRemoveIfDisabled<PaddleOcrVlEngine>(ocrConfiguration))
+                    {
+                        var paddleConfiguration = (PaddleOcrVlConfiguration)ocrConfiguration;
+                        var engine = TryGetEngine(() => new PaddleOcrVlEngine(langDescriptor, paddleConfiguration), detectionLanguage);
+                        if (engine is PaddleOcrVlEngine paddleEngine)
+                        {
+                            paddleEngine.UseConfiguration(paddleConfiguration);
+                            yield return paddleEngine;
+                        }
                     }
                 }
             }

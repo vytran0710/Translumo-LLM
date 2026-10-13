@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using Translumo.OCR.EasyOCR;
+using Translumo.OCR.PaddleOcrVl;
 using Translumo.OCR.Tesseract;
 using Translumo.OCR.WindowsOCR;
 
@@ -10,6 +11,7 @@ namespace Translumo.OCR.Configuration
     [XmlInclude(typeof(EasyOCRConfiguration))]
     [XmlInclude(typeof(WindowsOCRConfiguration))]
     [XmlInclude(typeof(TesseractOCRConfiguration))]
+    [XmlInclude(typeof(PaddleOcrVlConfiguration))]
     public abstract class OcrConfiguration : INotifyPropertyChanged
     {
         public bool Enabled

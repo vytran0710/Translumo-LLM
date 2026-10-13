@@ -7,7 +7,7 @@
 
 <h2 align="center" style="border: 0">Translumo LLM — 进阶实时屏幕翻译器（LLM 增强版）</h2>
 
-<p align="center"><a href="../README.md"><strong>English</strong></a> | <strong>简体中文</strong></p>
+<p align="center"><a href="README-EN.md"><strong>English</strong></a> | <strong>简体中文</strong></p>
 
 > **LLM 增强版** —— 由 [Chaobs](https://github.com/Chaobs) 基于
 > [Translumo](https://github.com/ramjke/Translumo) 修改的分支。在原版 OCR 引擎之上新增了
@@ -29,9 +29,9 @@ Translumo-LLM 建立在 **[Translumo](https://github.com/ramjke/Translumo)** 之
 
 ## 下载 Translumo-LLM
 
-**最新版本（v1.2.2）直链：**
+**最新版本（v1.3.1）直链：**
 
-[Translumo-LLM-v1.2.2.zip](https://github.com/Chaobs/Translumo-LLM/releases/download/v1.2.2/Translumo-LLM-v1.2.2.zip)
+[Translumo-LLM-v1.3.1.zip](https://github.com/Chaobs/Translumo-LLM/releases/download/v1.3.1/Translumo-LLM-v1.3.1.zip)
 
 下载后解压压缩包并运行 `Translumo-LLM.exe` 即可。所有必需的依赖（Python 运行时、OCR 模型、WebView2）
 均已打包在内，无需单独安装。
@@ -58,7 +58,7 @@ Translumo-LLM 建立在 **[Translumo](https://github.com/ramjke/Translumo)** 之
 - **低延迟**
   多项优化降低了系统占用，并尽可能缩短从文字出现到翻译完成之间的延迟。
 
-- **内置现代化文字识别器**：Windows OCR（推荐）、Tesseract 5.2（旧版）、EasyOCR（旧版）。
+- **内置现代化文字识别器**：Windows OCR（推荐）、PaddleOCR-VL（视觉语言模型，需自建服务）、Tesseract 5.2（旧版）、EasyOCR（旧版）。
 
 - **内置经典翻译服务**：DeepL（推荐）、Google 翻译、Yandex 翻译、Naver Papago。
 
@@ -101,6 +101,22 @@ Tesseract 老旧、速度慢且错误较多。
 EasyOCR 更慢，需要大量资源（包括特定 GPU），且经常引发问题。
 
 通常建议只保留 WindowsOCR，但为了兼容历史版本，其他引擎仍被保留。
+
+### 使用 PaddleOCR-VL
+
+[PaddleOCR-VL](https://github.com/PaddlePaddle/PaddleOCR) 是一个轻量级视觉语言 OCR 模型，在游戏艺术字体、多语种混排和复杂背景下的识别精度远高于传统引擎。Translumo-LLM 通过任意 **OpenAI 兼容服务** 调用它，因此你可以在自己的 GPU（本机或另一台机器）上运行，无需往 Translumo 中安装任何组件。
+
+1. 启动服务，例如使用 vLLM（Linux/WSL2 + NVIDIA GPU）：
+   ```bash
+   vllm serve PaddlePaddle/PaddleOCR-VL --trust-remote-code --port 8000
+   ```
+   也可以使用 PaddleOCR 自带的服务：`paddleocr genai_server --model_name PaddleOCR-VL-0.9B --backend vllm --port 8118`。
+2. 在 **设置 → 文字识别器** 中启用 **PaddleOCR-VL**，填写 API BASE URL（默认 `http://localhost:8000/v1`）以及服务端提供的模型名称。API 密钥可留空。
+3. 点击 **测试连接**，确认服务可访问且提供该模型。
+
+**逐行检测**（默认开启）会让模型逐行返回文字，再将其分组为文本块：跨行折断的句子会重新合并，而角色名、HUD 数值和按键提示保持独立。翻译结果显示为一条记录，每个文本块各占一行。此功能需要 PaddleOCR-VL 1.5 或更高版本，使用旧版模型时请关闭。
+
+提示：建议同时启用 **Windows OCR**。这样由快速引擎持续监测屏幕，只有出现新文字时才调用 PaddleOCR-VL，延迟更低。
 
 ### 尽量缩小捕获区域
 缩小捕获区域可减少从背景中误识别到零散字符的概率。较大的区域处理耗时更长。
@@ -182,7 +198,7 @@ A：请确保应用程序所在路径仅包含拉丁字母。
 
 4. 生成可分发的单文件构建：
    ```bash
-   dotnet publish src/Translumo/Translumo.csproj -c Release -r win-x64 -p:SolutionDir="$(pwd)/"
+   dotnet publish src/Translumo/Translumo.csproj -c Release -r win-x64
    ```
    发布文件位于 `src/Translumo/bin/Release/net8.0-windows/win-x64/publish/`。首次启动时，.NET 宿主会将
    单文件程序包解压到可执行文件同级的本地 `temp\` 目录，随后正常运行。
@@ -194,6 +210,7 @@ A：请确保应用程序所在路径仅包含拉丁字母。
 **新增特性**
 - **LLM AI 翻译** —— 通过大语言模型获得更具上下文感知、更高质量的翻译，支持的供应商包括：DeepSeek、通义千问 Qwen、Kimi、智谱 GLM、MiniMax、ChatGPT、Claude、Gemini、Grok，以及任意自定义 OpenAI 兼容接口。
 - **Ollama 本地模型支持** —— 通过 Ollama 在你自己的机器上完全本地运行开源 AI 模型，翻译无需 API 密钥，也无需联网。
+- **PaddleOCR-VL 文字识别** —— 新增基于 PaddleOCR-VL 视觉语言模型的识别引擎，可通过任意 OpenAI 兼容接口（vLLM / SGLang / PaddleOCR genai_server）调用；详见“使用 PaddleOCR-VL”。
 - **Google Lens 风格图片即时翻译** —— 按 **Alt+D** 按需捕获并翻译屏幕上任意静态区域（详见 FAQ）。
 - **界面本地化** —— 界面现已提供简体中文、繁体中文、日语、俄语与英语。
 - **可切换的浅色/深色主题** —— 选择适合自己的外观。
@@ -224,4 +241,5 @@ A：请确保应用程序所在路径仅包含拉丁字母。
 - [OpenCvSharp](https://github.com/shimat/opencvsharp)
 - [Python.NET](https://github.com/pythonnet/pythonnet)
 - [EasyOCR](https://github.com/JaidedAI/EasyOCR)
+- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)（PaddleOCR-VL）
 - [Silero TTS](https://github.com/snakers4/silero-models)

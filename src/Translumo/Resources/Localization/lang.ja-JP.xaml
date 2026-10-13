@@ -126,6 +126,11 @@
     <system:String x:Key="Str.OcrSettings.WindowsOcrDesc2">追加の言語パックのインストールが必要な場合があります。</system:String>
     <system:String x:Key="Str.OcrSettings.EasyOcrDesc" xml:space="preserve">Jaided AI による最先端のオープンソース OCR ソリューション。&#13;&#13;複雑な背景や特殊なフォントでも高精度なテキスト認識を実現します。&#13;&#13;&lt;Bold&gt;パフォーマンスへの影響:&lt;/Bold&gt; 高</system:String>
     <system:String x:Key="Str.OcrSettings.EasyOcrDesc2">追加パッケージ（Python、PyTorch）のインストールが必要です。</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVl">PaddleOCR-VL</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDesc" xml:space="preserve">Baidu PaddlePaddle によるビジョン言語 OCR モデル。OpenAI 互換 API 経由で利用します。&#13;&#13;装飾的なゲームフォント、複数の文字体系、複雑な背景でも非常に高精度です。&#13;&#13;&lt;Bold&gt;パフォーマンスへの影響:&lt;/Bold&gt; サーバー側で実行（GPU 推奨）</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDesc2">PaddleOCR-VL サーバー（vLLM / SGLang / PaddleOCR genai_server）の起動が必要です。</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlModel">モデル名</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDetectLines">行ごとに検出（PaddleOCR-VL 1.5 以降）</system:String>
 
     <!--  About window  -->
     <system:String x:Key="Str.About.Edition">Translumo-LLM エディション</system:String>

@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Input;
 using Newtonsoft.Json.Linq;
 using Translumo.Dialog;
 using Translumo.Dialog.Stages;
 using Translumo.Infrastructure.Language;
 using Translumo.OCR.Configuration;
 using Translumo.OCR.EasyOCR;
+using Translumo.OCR.PaddleOcrVl;
 using Translumo.OCR.Tesseract;
 using Translumo.OCR.WindowsOCR;
 using Translumo.Translation.Configuration;
@@ -58,6 +61,35 @@ namespace Translumo.MVVM.ViewModels
             }
         }
 
+        public bool PaddleOcrVlEnabled
+        {
+            get => PaddleOcrVl.Enabled;
+            set
+            {
+                PaddleOcrVl.Enabled = value;
+                OnPropertyChanged(nameof(PaddleOcrVlEnabled));
+            }
+        }
+
+        public PaddleOcrVlConfiguration PaddleOcrVl => _ocrConfiguration.GetConfiguration<PaddleOcrVlConfiguration>();
+
+        public string PaddleOcrVlTestStatus
+        {
+            get => _paddleOcrVlTestStatus;
+            set => SetProperty(ref _paddleOcrVlTestStatus, value);
+        }
+
+        public bool IsPaddleOcrVlTesting
+        {
+            get => _isPaddleOcrVlTesting;
+            set => SetProperty(ref _isPaddleOcrVlTesting, value);
+        }
+
+        public ICommand TestPaddleOcrVlCommand { get; }
+
+        private string _paddleOcrVlTestStatus;
+        private bool _isPaddleOcrVlTesting;
+
         private OcrGeneralConfiguration _ocrConfiguration;
         private TranslationConfiguration _translationConfiguration;
 
@@ -73,6 +105,32 @@ namespace Translumo.MVVM.ViewModels
             this._translationConfiguration = translationConfiguration;
             this._dialogService = dialogService;
             this._logger = logger;
+            this.TestPaddleOcrVlCommand = new AsyncRelayCommand(TestPaddleOcrVlAsync);
+        }
+
+        private async Task TestPaddleOcrVlAsync()
+        {
+            if (IsPaddleOcrVlTesting)
+            {
+                return;
+            }
+
+            IsPaddleOcrVlTesting = true;
+            PaddleOcrVlTestStatus = LocalizationManager.GetValue("Str.LlmSettings.Testing");
+            try
+            {
+                await PaddleOcrVlEngine.TestConnectionAsync(PaddleOcrVl);
+                PaddleOcrVlTestStatus = LocalizationManager.GetValue("Str.LlmSettings.TestSuccess");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "PaddleOCR-VL connection test failed");
+                PaddleOcrVlTestStatus = string.Format(LocalizationManager.GetValue("Str.LlmSettings.TestFail"), ex.Message);
+            }
+            finally
+            {
+                IsPaddleOcrVlTesting = false;
+            }
         }
 
         private async Task CheckWindowsOcrAvailabilityAsync()

@@ -1,0 +1,16 @@
+{
+  "dotnet.defaultSolution": "Translumo-LLM.sln",
+
+  // Build output contains ~400 MB of Python runtime + OCR models; keep it out of search and file watching
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "ext_components": true,
+    "components.zip": true
+  },
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/ext_components/**": true
+  }
+}

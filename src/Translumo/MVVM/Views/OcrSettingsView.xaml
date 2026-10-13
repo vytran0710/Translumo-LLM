@@ -11,9 +11,14 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <common:BoldFontConverter x:Key="boldFontConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </UserControl.Resources>
 
 
+    <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        Style="{DynamicResource MaterialDesignScrollViewer}"
+        VerticalScrollBarVisibility="Auto">
     <StackPanel HorizontalAlignment="Left">
         <StackPanel Orientation="Horizontal">
             <CheckBox
@@ -73,5 +78,85 @@
                 Foreground="{StaticResource SecondaryHueDarkBrush}"
                 Style="{StaticResource SecondaryLabel}" />
         </StackPanel>
+        <StackPanel Margin="0,19,0,0" Orientation="Horizontal">
+            <CheckBox
+                Margin="2,0,0,0"
+                Content="{materialDesign:PackIcon Close}"
+                IsChecked="{Binding PaddleOcrVlEnabled}"
+                Style="{StaticResource RoundedCheckBox}" />
+            <Label
+                Content="{DynamicResource Str.OcrSettings.PaddleOcrVl}"
+                FontWeight="{Binding PaddleOcrVlEnabled, Converter={StaticResource boldFontConverter}}"
+                Style="{StaticResource ControlCaptionLabel}" />
+        </StackPanel>
+        <StackPanel>
+            <Label>
+                <TextBlock common:Inlines.Text="{DynamicResource Str.OcrSettings.PaddleOcrVlDesc}" Style="{StaticResource TextBlockBase}" />
+            </Label>
+            <Label
+                Margin="0,-8,0,0"
+                Content="{DynamicResource Str.OcrSettings.PaddleOcrVlDesc2}"
+                Foreground="{StaticResource SecondaryHueDarkBrush}"
+                Style="{StaticResource SecondaryLabel}" />
+        </StackPanel>
+        <StackPanel Margin="6,4,0,8" Visibility="{Binding PaddleOcrVlEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel Margin="0,0,0,8">
+                <Label
+                    Margin="0,0,0,2"
+                    Content="{DynamicResource Str.LlmSettings.Endpoint}"
+                    Style="{StaticResource ControlCaptionLabel}" />
+                <TextBox
+                    Width="430"
+                    HorizontalAlignment="Left"
+                    FontSize="13"
+                    Style="{StaticResource TextBoxBase}"
+                    Text="{Binding Path=PaddleOcrVl.Endpoint, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+            <StackPanel Margin="0,0,0,8">
+                <Label
+                    Margin="0,0,0,2"
+                    Content="{DynamicResource Str.OcrSettings.PaddleOcrVlModel}"
+                    Style="{StaticResource ControlCaptionLabel}" />
+                <TextBox
+                    Width="430"
+                    HorizontalAlignment="Left"
+                    FontSize="13"
+                    Style="{StaticResource TextBoxBase}"
+                    Text="{Binding Path=PaddleOcrVl.ModelName, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+            <StackPanel Margin="0,0,0,8">
+                <Label
+                    Margin="0,0,0,2"
+                    Content="{DynamicResource Str.LlmSettings.ApiKey}"
+                    Style="{StaticResource ControlCaptionLabel}" />
+                <TextBox
+                    Width="430"
+                    HorizontalAlignment="Left"
+                    FontSize="13"
+                    Style="{StaticResource TextBoxBase}"
+                    Text="{Binding Path=PaddleOcrVl.ApiKey, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+            <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                <ToggleButton IsChecked="{Binding PaddleOcrVl.DetectLines}" Style="{StaticResource PrimaryToggleButton}" />
+                <Label Content="{DynamicResource Str.OcrSettings.PaddleOcrVlDetectLines}" Style="{StaticResource ControlCaptionLabel}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button
+                    Margin="0,4,0,0"
+                    HorizontalAlignment="Left"
+                    Command="{Binding TestPaddleOcrVlCommand}"
+                    Content="{DynamicResource Str.LlmSettings.Test}"
+                    Style="{StaticResource PrimaryButton}" />
+                <TextBlock
+                    MaxWidth="300"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Style="{StaticResource TextBlockBase}"
+                    Text="{Binding PaddleOcrVlTestStatus}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </StackPanel>
     </StackPanel>
+    </ScrollViewer>
 </UserControl>

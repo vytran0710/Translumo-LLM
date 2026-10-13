@@ -128,6 +128,11 @@
     <system:String x:Key="Str.OcrSettings.WindowsOcrDesc2">Additional language packs may need to be installed</system:String>
     <system:String x:Key="Str.OcrSettings.EasyOcrDesc" xml:space="preserve">The most advanced open-source OCR solution by Jaided AI.&#13;High precision of text recognition even with a complex background and uncommon fonts.&#13;&lt;Bold&gt;Performance impact:&lt;/Bold&gt; high</system:String>
     <system:String x:Key="Str.OcrSettings.EasyOcrDesc2">Installation additional packages (Python, PyTorch) is required</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVl">PaddleOCR-VL</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDesc" xml:space="preserve">Vision-language OCR model by Baidu PaddlePaddle, served over an OpenAI-compatible API.&#13;Very accurate on stylized game fonts, mixed scripts and busy backgrounds.&#13;&lt;Bold&gt;Performance impact:&lt;/Bold&gt; runs on the server (GPU recommended)</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDesc2">Requires a running PaddleOCR-VL server (vLLM / SGLang / PaddleOCR genai_server)</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlModel">Model name</system:String>
+    <system:String x:Key="Str.OcrSettings.PaddleOcrVlDetectLines">Detect individual lines (PaddleOCR-VL 1.5+)</system:String>
 
     <!--  About window  -->
     <system:String x:Key="Str.About.Edition">Translumo-LLM Edition</system:String>

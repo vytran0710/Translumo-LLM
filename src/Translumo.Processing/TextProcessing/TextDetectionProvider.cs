@@ -48,7 +48,9 @@ namespace Translumo.Processing.TextProcessing
                 return new TextDetectionResult(ocrEngine, _languageDescriptor)
                 {
                     ValidityScore = scorePrediction,
-                    Text = _configuration.KeepFormatting ? string.Join(Environment.NewLine, detectedLines) :  resultText,
+                    Text = _configuration.KeepFormatting || ocrEngine.PreservesLineBreaks
+                        ? string.Join(Environment.NewLine, detectedLines)
+                        : resultText,
                     ValidatedText = validatedText
                 };
             }
