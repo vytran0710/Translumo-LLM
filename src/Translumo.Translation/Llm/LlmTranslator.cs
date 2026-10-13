@@ -37,15 +37,7 @@ namespace Translumo.Translation.Llm
 
         protected override async Task<string> TranslateTextInternal(LlmContainer container, string sourceText)
         {
-            if (_llmSettings.RequiresApiKey && string.IsNullOrWhiteSpace(_llmSettings.ApiKey))
-            {
-                throw new TranslationException("LLM translator: API Key is not configured.");
-            }
-
-            if (!_llmSettings.Enabled)
-            {
-                throw new TranslationException("LLM translator: endpoint and model name are required for a custom provider.");
-            }
+            EnsureConfigured();
 
             var systemPrompt = (_llmSettings.SystemPrompt ?? string.Empty)
                 .Replace("{SourceLanguage}", SourceLangDescriptor.Language.ToString(), StringComparison.Ordinal)
@@ -64,6 +56,40 @@ namespace Translumo.Translation.Llm
         /// </summary>
         public async Task<string> TranslateAutoDetectAsync(string sourceText, string targetLanguageName)
         {
+            EnsureConfigured();
+
+            var systemPrompt = BuildAutoDetectPrompt(targetLanguageName);
+            // A fresh primary container is created per invocation. Containers are not IDisposable
+            // in this codebase (BaseTranslator keeps its containers alive for the app lifetime and
+            // never disposes them), so we let the GC reclaim it after the call returns.
+            var container = new LlmContainer(isPrimary: true);
+            return await TranslateWithPromptAsync(container, sourceText, systemPrompt).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Translates several texts from the same image in ONE request (source auto-detected), so the model sees
+        /// them together. Returns null when the reply isn't a JSON array of the expected length, so the caller
+        /// can fall back to <see cref="TranslateAutoDetectAsync"/> per text.
+        /// </summary>
+        public async Task<IReadOnlyList<string>> TryTranslateBatchAutoDetectAsync(IReadOnlyList<string> sourceTexts,
+            string targetLanguageName)
+        {
+            if (sourceTexts.Count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            EnsureConfigured();
+
+            var container = new LlmContainer(isPrimary: true);
+            var reply = await TranslateWithPromptAsync(container, LlmBatchFormat.BuildUserMessage(sourceTexts),
+                LlmBatchFormat.BuildSystemPrompt(targetLanguageName)).ConfigureAwait(false);
+
+            return LlmBatchFormat.ParseReply(reply, sourceTexts.Count);
+        }
+
+        private void EnsureConfigured()
+        {
             if (_llmSettings.RequiresApiKey && string.IsNullOrWhiteSpace(_llmSettings.ApiKey))
             {
                 throw new TranslationException("LLM translator: API Key is not configured.");
@@ -73,13 +99,6 @@ namespace Translumo.Translation.Llm
             {
                 throw new TranslationException("LLM translator: endpoint and model name are required for a custom provider.");
             }
-
-            var systemPrompt = BuildAutoDetectPrompt(targetLanguageName);
-            // A fresh primary container is created per invocation. Containers are not IDisposable
-            // in this codebase (BaseTranslator keeps its containers alive for the app lifetime and
-            // never disposes them), so we let the GC reclaim it after the call returns.
-            var container = new LlmContainer(isPrimary: true);
-            return await TranslateWithPromptAsync(container, sourceText, systemPrompt).ConfigureAwait(false);
         }
 
         private static string BuildAutoDetectPrompt(string targetLanguageName) =>

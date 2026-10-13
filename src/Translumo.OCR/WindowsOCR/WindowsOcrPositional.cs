@@ -34,8 +34,6 @@ namespace Translumo.OCR.WindowsOCR
         /// </summary>
         public static async Task<OcrRegionResult> DetectAndRecognizeAsync(byte[] image, string forcedLanguageTag = null)
         {
-            var (softwareBitmap, width, height) = await DecodeAsync(image).ConfigureAwait(false);
-
             IReadOnlyList<string> candidates = forcedLanguageTag != null
                 ? new[] { forcedLanguageTag }
                 : GetCandidateLanguageTags();
@@ -45,34 +43,46 @@ namespace Translumo.OCR.WindowsOCR
                 return null;
             }
 
+            // Recognizers run in parallel (one pass per candidate script); each gets its own decoded bitmap
+            var passes = await Task.WhenAll(candidates.Select(tag => RecognizeWithAsync(image, tag))).ConfigureAwait(false);
+
             OcrRegionResult best = null;
             var bestScore = -1;
-            foreach (var tag in candidates)
+            foreach (var pass in passes.Where(p => p.Result != null))
             {
-                var engine = OcrEngine.TryCreateFromLanguage(new Language(tag));
-                if (engine == null)
+                // Strictly greater: on a tie the earlier candidate wins, as before
+                if (best == null || pass.Score > bestScore)
                 {
-                    continue;
-                }
-
-                OcrResult ocr = await engine.RecognizeAsync(softwareBitmap).AsTask().ConfigureAwait(false);
-                var lines = ExtractLines(ocr);
-                var score = ScoreForLanguage(ocr.Text, tag);
-
-                if (best == null || score > bestScore)
-                {
-                    bestScore = score;
-                    best = new OcrRegionResult
-                    {
-                        LanguageTag = tag,
-                        Lines = lines,
-                        ImageWidth = width,
-                        ImageHeight = height
-                    };
+                    bestScore = pass.Score;
+                    best = pass.Result;
                 }
             }
 
             return best;
+        }
+
+        private static async Task<(OcrRegionResult Result, int Score)> RecognizeWithAsync(byte[] image, string tag)
+        {
+            var engine = OcrEngine.TryCreateFromLanguage(new Language(tag));
+            if (engine == null)
+            {
+                return (null, -1);
+            }
+
+            var (softwareBitmap, width, height) = await DecodeAsync(image).ConfigureAwait(false);
+            using (softwareBitmap)
+            {
+                OcrResult ocr = await engine.RecognizeAsync(softwareBitmap).AsTask().ConfigureAwait(false);
+                var result = new OcrRegionResult
+                {
+                    LanguageTag = tag,
+                    Lines = ExtractLines(ocr),
+                    ImageWidth = width,
+                    ImageHeight = height
+                };
+
+                return (result, ScoreForLanguage(ocr.Text, tag));
+            }
         }
 
         private static async Task<(SoftwareBitmap bitmap, int width, int height)> DecodeAsync(byte[] image)

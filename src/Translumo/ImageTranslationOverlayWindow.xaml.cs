@@ -23,6 +23,12 @@ namespace Translumo
     /// </summary>
     public partial class ImageTranslationOverlayWindow : Window
     {
+        private const double MAX_FONT_SIZE = 28;
+        private const double MIN_FONT_SIZE = 9;
+        // Vertical source text (manga columns) is replaced by horizontal text, which needs a wider label
+        private const double VERTICAL_LABEL_WIDTH_RATIO = 0.6;
+        private static readonly Thickness LabelPadding = new Thickness(4, 1, 4, 1);
+
         public sealed class TargetLanguageOption
         {
             public Languages Value { get; init; }
@@ -163,47 +169,109 @@ namespace Translumo
             }
 
             var (scaleX, scaleY) = ComputeScale();
+            var typeface = new Typeface(FontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+            var pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
             foreach (var line in _result.Lines)
             {
-                var x = _dipTopLeft.X + line.Box.X * scaleX;
-                var y = _dipTopLeft.Y + line.Box.Y * scaleY;
-                var h = Math.Max(1, line.Box.Height * scaleY);
+                var source = new Rect(
+                    _dipTopLeft.X + line.Box.X * scaleX,
+                    _dipTopLeft.Y + line.Box.Y * scaleY,
+                    Math.Max(1, line.Box.Width * scaleX),
+                    Math.Max(1, line.Box.Height * scaleY));
+                var area = GetLabelArea(source, line.IsVertical);
+                var textWidth = Math.Max(1, area.Width - LabelPadding.Left - LabelPadding.Right);
+                var textHeight = Math.Max(1, area.Height - LabelPadding.Top - LabelPadding.Bottom);
 
                 var textBlock = new TextBlock
                 {
                     Text = line.Translation,
                     Foreground = new SolidColorBrush(Color.FromRgb(0xF2, 0xF5, 0xF0)),
-                    FontSize = Math.Clamp(h * 0.68, 11, 40),
-                    TextWrapping = TextWrapping.Wrap
+                    FontSize = FitFontSize(line.Translation, typeface, textWidth, textHeight, pixelsPerDip),
+                    TextWrapping = TextWrapping.Wrap,
+                    TextAlignment = line.IsVertical ? TextAlignment.Center : TextAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center
                 };
 
+                // Covers the source text; grows downward only if the text doesn't fit even at the minimum size
                 var border = new Border
                 {
                     Tag = "line",
                     Background = new SolidColorBrush(Color.FromArgb(0xF0, 0x10, 0x14, 0x18)),
                     CornerRadius = new CornerRadius(3),
-                    Padding = new Thickness(4, 1, 4, 1),
-                    MaxWidth = Math.Max(40, _dipBottomRight.X - x),
+                    Padding = LabelPadding,
+                    Width = area.Width,
+                    MinHeight = area.Height,
                     Child = textBlock
                 };
 
-                Canvas.SetLeft(border, x);
-                Canvas.SetTop(border, y);
+                Canvas.SetLeft(border, area.X);
+                Canvas.SetTop(border, area.Y);
                 LayerCanvas.Children.Add(border);
             }
+        }
+
+        /// <summary>The block's box, widened for vertical text and kept inside the captured region.</summary>
+        private Rect GetLabelArea(Rect source, bool isVertical)
+        {
+            var regionWidth = Math.Max(1, _dipBottomRight.X - _dipTopLeft.X);
+            var width = isVertical ? Math.Max(source.Width, source.Height * VERTICAL_LABEL_WIDTH_RATIO) : source.Width;
+            width = Math.Min(width, regionWidth);
+
+            var left = source.X + source.Width / 2 - width / 2;
+            left = Math.Clamp(left, _dipTopLeft.X, _dipBottomRight.X - width);
+
+            return new Rect(left, source.Y, width, source.Height);
+        }
+
+        /// <summary>Largest font size (MIN..MAX) at which the wrapped text fits the given box.</summary>
+        private static double FitFontSize(string text, Typeface typeface, double width, double height, double pixelsPerDip)
+        {
+            bool Fits(double size)
+            {
+                var formatted = new FormattedText(text ?? string.Empty, System.Globalization.CultureInfo.CurrentUICulture,
+                    FlowDirection.LeftToRight, typeface, size, Brushes.White, pixelsPerDip)
+                {
+                    MaxTextWidth = width
+                };
+
+                return formatted.Height <= height && formatted.WidthIncludingTrailingWhitespace <= width + 0.5;
+            }
+
+            if (!Fits(MIN_FONT_SIZE))
+            {
+                return MIN_FONT_SIZE;
+            }
+
+            double low = MIN_FONT_SIZE, high = MAX_FONT_SIZE;
+            while (high - low > 0.5)
+            {
+                var mid = (low + high) / 2;
+                if (Fits(mid))
+                {
+                    low = mid;
+                }
+                else
+                {
+                    high = mid;
+                }
+            }
+
+            return Math.Floor(low);
         }
 
         private void UpdateDetectedLabel()
         {
             if (_result == null || !_result.HasText)
             {
-                DetectedLabel.Text = "No text detected";
+                DetectedLabel.Text = string.IsNullOrEmpty(_result?.Notice) ? "No text detected" : _result.Notice;
                 return;
             }
 
-            DetectedLabel.Text = string.IsNullOrEmpty(_result.DetectedLanguageTag)
-                ? "Translated"
-                : $"Detected: {_result.DetectedLanguageTag}";
+            DetectedLabel.Text = !string.IsNullOrEmpty(_result.Notice)
+                ? _result.Notice
+                : string.IsNullOrEmpty(_result.DetectedLanguageTag)
+                    ? "Translated"
+                    : $"Detected: {_result.DetectedLanguageTag}";
         }
 
         /// <summary>Populates the overlay with a finished translation (called from the background

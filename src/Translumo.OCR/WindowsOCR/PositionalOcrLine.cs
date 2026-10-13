@@ -12,6 +12,9 @@ namespace Translumo.OCR.WindowsOCR
 
         /// <summary>Bounding box in source-image pixels.</summary>
         public RectangleF Box { get; init; }
+
+        /// <summary>Vertical (top-to-bottom) text such as Japanese manga columns: clearly taller than wide.</summary>
+        public bool IsVertical => Box.Height > Box.Width * 1.5f;
     }
 
     /// <summary>

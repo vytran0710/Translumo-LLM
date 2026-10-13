@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace Translumo.Processing.ImageTranslation
 {
-    /// <summary>One OCR line with its translation and pixel bounding box (image-relative).</summary>
+    /// <summary>One recognized text block with its translation and pixel bounding box (image-relative).</summary>
     public sealed class TranslatedLine
     {
         public string Source { get; init; }
@@ -11,6 +11,9 @@ namespace Translumo.Processing.ImageTranslation
         public string Translation { get; init; }
 
         public RectangleF Box { get; init; }
+
+        /// <summary>Source text runs top-to-bottom (e.g. manga columns); the overlay widens its label.</summary>
+        public bool IsVertical { get; init; }
     }
 
     /// <summary>Full result of translating a captured region (Google Lens style).</summary>
@@ -24,6 +27,9 @@ namespace Translumo.Processing.ImageTranslation
         public int ImageWidth { get; init; }
 
         public int ImageHeight { get; init; }
+
+        /// <summary>Optional message for the user, e.g. why a fallback recognizer was used.</summary>
+        public string Notice { get; init; }
 
         public bool HasText => Lines.Count > 0;
     }
