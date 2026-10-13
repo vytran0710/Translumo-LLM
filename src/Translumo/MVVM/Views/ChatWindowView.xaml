@@ -50,6 +50,27 @@
             MouseDown="rtbChat_MouseDown">
             <FlowDocument />
         </RichTextBox>
+        <StackPanel
+            Margin="0,6,12,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            IsHitTestVisible="False"
+            Orientation="Horizontal"
+            Visibility="{Binding IsTranslating, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ProgressBar
+                Width="14"
+                Height="14"
+                Foreground="{StaticResource PrimaryHueMidBrush}"
+                IsIndeterminate="{Binding IsTranslating}"
+                Style="{DynamicResource MaterialDesignCircularProgressBar}" />
+            <TextBlock
+                Margin="6,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="12"
+                FontStyle="Italic"
+                Foreground="{StaticResource PrimaryHueMidBrush}"
+                Text="{Binding TranslationProgressText}" />
+        </StackPanel>
         <TextBlock
             Name="fontTextBlockInstance"
             LineHeight="{Binding Model.Configuration.LineSpacing}"

@@ -9,5 +9,8 @@ namespace Translumo.Processing.Interfaces
         void SendText(string text, TextTypes textType);
 
         void ClearTexts();
+
+        /// <summary>Reports translation progress (item current/total) or idle.</summary>
+        void ReportProgress(TranslationProgress progress);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using Translumo.Infrastructure;
+using Translumo.Processing;
 using Translumo.Processing.Interfaces;
 using Translumo.Utils;
 
@@ -9,6 +10,7 @@ namespace Translumo.Services
     {
         public event EventHandler<TranslatedEventArgs> TextRaised;
         public event EventHandler ClearTextsRaised; 
+        public event EventHandler<TranslationProgress> ProgressChanged;
 
         public void SendText(string text, bool successful)
         {
@@ -23,6 +25,11 @@ namespace Translumo.Services
         public void ClearTexts()
         {
             ClearTextsRaised?.RaiseOnUIThread(this);
+        }
+
+        public void ReportProgress(TranslationProgress progress)
+        {
+            ProgressChanged?.RaiseOnUIThread(this, progress);
         }
     }
 }

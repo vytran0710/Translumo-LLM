@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Translumo.Dialog;
@@ -14,6 +15,7 @@ using Translumo.Infrastructure.Constants;
 using Translumo.Infrastructure.Dispatching;
 using Translumo.Infrastructure.Language;
 using Translumo.MVVM.Models;
+using Translumo.Processing;
 using Translumo.Processing.ImageTranslation;
 using Translumo.Processing.Interfaces;
 using Translumo.Services;
@@ -33,11 +35,27 @@ namespace Translumo.MVVM.ViewModels
             set => SetProperty(ref _chatWindowIsVisible, value);
         }
 
+        /// <summary>True while new text is being recognized/translated; drives the in-progress indicator.</summary>
+        public bool IsTranslating
+        {
+            get => _isTranslating;
+            set => SetProperty(ref _isTranslating, value);
+        }
+
+        /// <summary>Indicator text, e.g. "Translating… (1/3)".</summary>
+        public string TranslationProgressText
+        {
+            get => _translationProgressText;
+            set => SetProperty(ref _translationProgressText, value);
+        }
+
         public ICommand ShowHideSettingsCommand => new RelayCommand(OnShowHideSettings);
         public ICommand ShowHideChatCommand => new RelayCommand(OnShowHideChat);
         public ICommand LoadedCommand => new RelayCommand(OnLoadedCommand);
 
         private bool _chatWindowIsVisible = true;
+        private bool _isTranslating;
+        private string _translationProgressText;
         private bool _hasUpdates = false;
 
         private readonly DialogService _dialogService;
@@ -49,6 +67,13 @@ namespace Translumo.MVVM.ViewModels
         private readonly ICapturerFactory _capturerFactory;
         private readonly LanguageService _languageService;
         private readonly TranslationConfiguration _translationConfiguration;
+
+        // Delays showing the indicator so fast translators don't make it flicker
+        private readonly DispatcherTimer _busyIndicatorDelay = new DispatcherTimer(DispatcherPriority.Normal, System.Windows.Application.Current.Dispatcher)
+        {
+            Interval = TimeSpan.FromMilliseconds(BUSY_INDICATOR_DELAY_MS)
+        };
+        private const int BUSY_INDICATOR_DELAY_MS = 250;
 
         private IScreenCapturer _imageCapturer;
         private Languages _lastImageTarget;
@@ -81,6 +106,33 @@ namespace Translumo.MVVM.ViewModels
             hotKeysManager.WindowStyleChangeKeyPressed += HotKeysManagerOnWindowStyleChangeKeyPressed;
             chatTextMediator.TextRaised += ChatTextMediatorOnTextRaised;
             chatTextMediator.ClearTextsRaised += ChatTextMediatorOnClearTextsRaised;
+            chatTextMediator.ProgressChanged += ChatTextMediatorOnProgressChanged;
+            _busyIndicatorDelay.Tick += BusyIndicatorDelayOnTick;
+        }
+
+        private void ChatTextMediatorOnProgressChanged(object sender, TranslationProgress progress)
+        {
+            if (progress.IsBusy)
+            {
+                var format = LocalizationManager.GetValue("Str.Messages.TranslatingProgress") ?? "Translating… ({0}/{1})";
+                TranslationProgressText = string.Format(format, progress.Current, progress.Total);
+                // Don't restart a pending delay, or rapid updates would keep postponing the indicator
+                if (!IsTranslating && !_busyIndicatorDelay.IsEnabled)
+                {
+                    _busyIndicatorDelay.Start();
+                }
+
+                return;
+            }
+
+            _busyIndicatorDelay.Stop();
+            IsTranslating = false;
+        }
+
+        private void BusyIndicatorDelayOnTick(object sender, EventArgs e)
+        {
+            _busyIndicatorDelay.Stop();
+            IsTranslating = true;
         }
 
         private void HotKeysManagerOnSettingVisibilityKeyPressed(object sender, EventArgs e)

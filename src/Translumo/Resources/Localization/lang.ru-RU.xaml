@@ -41,6 +41,7 @@
     <!--  Сообщения времени выполнения  -->
     <system:String x:Key="Str.Messages.NoOcrEngine">OCR-движок не выбран!</system:String>
     <system:String x:Key="Str.Messages.TranslationStarted">Перевод начат</system:String>
+    <system:String x:Key="Str.Messages.TranslatingProgress">Перевод… ({0}/{1})</system:String>
     <system:String x:Key="Str.Messages.TranslationFinished">Перевод завершён</system:String>
     <system:String x:Key="Str.Messages.CapturerInitFailed">Не удалось инициализировать захват экрана. Подробности в журнале</system:String>
     <system:String x:Key="Str.Messages.CaptureFailed">Не удалось захватить экран</system:String>

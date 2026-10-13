@@ -41,6 +41,7 @@ namespace Translumo.Processing
         private readonly LlmProfiles _llmProfiles;
         private readonly ILocalizationProvider _localizationProvider;
         private static readonly object _obj = new object();
+        private readonly BusyTracker _busyTracker;
 
         private ITTSEngine _ttsEngine;
         private IEnumerable<IOCREngine> _engines;
@@ -67,6 +68,7 @@ namespace Translumo.Processing
             _localizationProvider = localizationProvider;
             _llmProfiles = llmProfiles;
             _chatTextMediator = chatTextMediator;
+            _busyTracker = new BusyTracker(chatTextMediator.ReportProgress);
             _capturerFactory = capturerFactory;
             _translationConfiguration = translationConfiguration;
             _ocrGeneralConfiguration = ocrConfiguration;
@@ -228,32 +230,42 @@ namespace Translumo.Processing
                             }
                         }
 
-                        for (var i = 0; i < otherOcr.Length; i++)
+                        // New text is on screen: it is one queued item until its translation is shown or it is dropped
+                        IDisposable progressItem = _busyTracker.BeginItem();
+                        try
                         {
-                            detectedResults[i] = _textProvider.GetTextAsync(otherOcr[i], screenshot);
-                        }
+                            for (var i = 0; i < otherOcr.Length; i++)
+                            {
+                                detectedResults[i] = _textProvider.GetTextAsync(otherOcr[i], screenshot);
+                            }
 
-                        detectedResults[^1] = Task.FromResult(primaryDetected);
-                        lastIterationType = IterationType.Full;
-                        Task.WaitAll(detectedResults);
+                            detectedResults[^1] = Task.FromResult(primaryDetected);
+                            lastIterationType = IterationType.Full;
+                            Task.WaitAll(detectedResults);
 
-                        TextDetectionResult bestDetected = GetBestDetectionResult(detectedResults, 3);
-                        if (bestDetected.ValidityScore <= MIN_SCORE_THRESHOLD)
-                        {
+                            TextDetectionResult bestDetected = GetBestDetectionResult(detectedResults, 3);
+                            if (bestDetected.ValidityScore <= MIN_SCORE_THRESHOLD)
+                            {
+                                sequentialText = false;
+                                continue;
+                            }
+
+                            if (_textResultCacheService.IsCached(bestDetected.Text, bestDetected.ValidityScore, sequentialText, 
+                                    bestDetected.Language.Asian, out iterationId))
+                            {
+                                sequentialText = false;
+                                continue;
+                            }
+
                             sequentialText = false;
-                            continue;
+                            //resultLogger.LogResults(detectedResults.Select(res => res.Result), screenshot);
+                            activeTranslationTasks.Add(TranslateTextAsync(bestDetected.Text, iterationId, progressItem));
+                            progressItem = null; // now owned by the translation task
                         }
-
-                        if (_textResultCacheService.IsCached(bestDetected.Text, bestDetected.ValidityScore, sequentialText, 
-                                bestDetected.Language.Asian, out iterationId))
+                        finally
                         {
-                            sequentialText = false;
-                            continue;
+                            progressItem?.Dispose();
                         }
-
-                        sequentialText = false;
-                        //resultLogger.LogResults(detectedResults.Select(res => res.Result), screenshot);
-                        activeTranslationTasks.Add(TranslateTextAsync(bestDetected.Text, iterationId));
                     }
                 }
                 catch (CaptureException ex)
@@ -312,6 +324,7 @@ namespace Translumo.Processing
                 }
             }
 
+            IDisposable progressItem = _busyTracker.BeginItem();
             try
             {
                 Task translationTask;
@@ -322,7 +335,8 @@ namespace Translumo.Processing
                     // TODO: sometimes one of task (win tts) is not complete long time and translation is not working
                     Task.WaitAll(taskResults);
                     TextDetectionResult bestDetected = GetBestDetectionResult(taskResults, 3);
-                    translationTask = TranslateTextAsync(bestDetected.Text, Guid.NewGuid());
+                    translationTask = TranslateTextAsync(bestDetected.Text, Guid.NewGuid(), progressItem);
+                    progressItem = null; // now owned by the translation task
                 }
 
                 translationTask.Wait(TRANSLATION_TIMEOUT_MS);
@@ -342,16 +356,27 @@ namespace Translumo.Processing
                 _chatTextMediator.SendText(string.Format(_localizationProvider.GetValue("Str.Messages.TranslatorFailed") ?? "{0} failed: {1}. Try to change translator, use a proxy or switch VPN location.", _translator.GetType().Name, ex.Message), false);
                 _logger.LogError(ex, $"Processing iteration failed due to unknown error");
             }
+            finally
+            {
+                progressItem?.Dispose();
+            }
         }
 
-        private async Task TranslateTextAsync(string text, Guid iterationId)
+        private async Task TranslateTextAsync(string text, Guid iterationId, IDisposable progressItem)
         {
-            var translation = await _translator.TranslateTextAsync(text);
-            if (!string.IsNullOrWhiteSpace(translation) && !_textResultCacheService.IsTranslatedCached(translation, iterationId))
+            try
             {
-                Interlocked.Exchange(ref _lastTranslatedTextTicks, DateTime.UtcNow.Ticks);
-                _chatTextMediator.SendText(translation, true);
-                _ttsEngine.SpeechText(translation);
+                var translation = await _translator.TranslateTextAsync(text);
+                if (!string.IsNullOrWhiteSpace(translation) && !_textResultCacheService.IsTranslatedCached(translation, iterationId))
+                {
+                    Interlocked.Exchange(ref _lastTranslatedTextTicks, DateTime.UtcNow.Ticks);
+                    _chatTextMediator.SendText(translation, true);
+                    _ttsEngine.SpeechText(translation);
+                }
+            }
+            finally
+            {
+                progressItem.Dispose();
             }
         }
 

@@ -41,6 +41,7 @@
     <!--  執行階段訊息  -->
     <system:String x:Key="Str.Messages.NoOcrEngine">未選擇文字識別器</system:String>
     <system:String x:Key="Str.Messages.TranslationStarted">翻譯已啟動</system:String>
+    <system:String x:Key="Str.Messages.TranslatingProgress">翻譯中…（{0}/{1}）</system:String>
     <system:String x:Key="Str.Messages.TranslationFinished">翻譯已結束</system:String>
     <system:String x:Key="Str.Messages.CapturerInitFailed">無法初始化螢幕擷取器，請查看日誌了解詳情</system:String>
     <system:String x:Key="Str.Messages.CaptureFailed">截圖失敗</system:String>

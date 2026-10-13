@@ -41,6 +41,7 @@
     <!--  実行時メッセージ  -->
     <system:String x:Key="Str.Messages.NoOcrEngine">OCR エンジンが選択されていません</system:String>
     <system:String x:Key="Str.Messages.TranslationStarted">翻訳を開始しました</system:String>
+    <system:String x:Key="Str.Messages.TranslatingProgress">翻訳中…（{0}/{1}）</system:String>
     <system:String x:Key="Str.Messages.TranslationFinished">翻訳が終了しました</system:String>
     <system:String x:Key="Str.Messages.CapturerInitFailed">キャプチャ機能の初期化に失敗しました。ログを確認してください</system:String>
     <system:String x:Key="Str.Messages.CaptureFailed">画面のキャプチャに失敗しました</system:String>

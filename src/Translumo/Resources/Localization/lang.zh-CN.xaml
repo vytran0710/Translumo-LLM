@@ -41,6 +41,7 @@
     <!--  运行时消息  -->
     <system:String x:Key="Str.Messages.NoOcrEngine">未选择文字识别器</system:String>
     <system:String x:Key="Str.Messages.TranslationStarted">翻译已启动</system:String>
+    <system:String x:Key="Str.Messages.TranslatingProgress">翻译中…（{0}/{1}）</system:String>
     <system:String x:Key="Str.Messages.TranslationFinished">翻译已结束</system:String>
     <system:String x:Key="Str.Messages.CapturerInitFailed">无法初始化屏幕捕获器，请查看日志了解详情</system:String>
     <system:String x:Key="Str.Messages.CaptureFailed">截图失败</system:String>

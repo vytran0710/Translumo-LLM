@@ -41,6 +41,7 @@
     <!--  Runtime messages  -->
     <system:String x:Key="Str.Messages.NoOcrEngine">No OCR engine is selected!</system:String>
     <system:String x:Key="Str.Messages.TranslationStarted">Translation started</system:String>
+    <system:String x:Key="Str.Messages.TranslatingProgress">Translating… ({0}/{1})</system:String>
     <system:String x:Key="Str.Messages.TranslationFinished">Translation finished</system:String>
     <system:String x:Key="Str.Messages.CapturerInitFailed">Failed to initialize capturer. Please check logs for details</system:String>
     <system:String x:Key="Str.Messages.CaptureFailed">Failed to capture screen</system:String>
